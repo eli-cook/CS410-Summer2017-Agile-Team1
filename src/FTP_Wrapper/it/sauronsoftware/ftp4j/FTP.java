@@ -5,6 +5,7 @@ public class FTP {
         System.out.println( "Hello World!" );
         FTPClient client = new FTPClient();
 
+        FTPClient client = new FTPClient();
 
         System.exit( 0 ); //success
     }
