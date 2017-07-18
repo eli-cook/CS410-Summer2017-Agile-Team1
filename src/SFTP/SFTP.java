@@ -6,7 +6,7 @@ import com.jcraft.jsch.*;
 
 import java.util.Scanner;
 
-public class UI {
+public class SFTP {
     public static Scanner in = new Scanner(System.in);
     public static JSch client = new JSch();
     public static Session session = null;
