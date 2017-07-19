@@ -53,17 +53,33 @@ public class OptionWindow {
 
     }
 
-    // How to handle overwriting an existing directory.
+    // How to handle overwriting an existing directory: Current solution is to output an error message.
+    // How to handle invalid directory names: Same approach as above.
     private static void mkdir(){
         String newdir = null;
         System.out.println("Enter the name of the new directory:");
         newdir = in.nextLine();
-        try {
-            channelSftp.mkdir(newdir);
+
+        // Check for invalid characters before building the File object using a blacklist.
+        // indexOf will return -1 if the input does not exist in the string array.
+        if(newdir.indexOf("<") != - 1 || newdir.indexOf(">") != -1 || newdir.indexOf("%") != -1 || newdir.indexOf(":") != -1
+                || newdir.contentEquals(".") || newdir.contentEquals("..")){
+            System.out.println("Invalid characters are in your new directory name, directory creation aborted.");
+            return;
         }
-        catch(SftpException e)
-        {
-            e.printStackTrace();
+
+        File check = new File(newdir);
+
+        if(check.exists()){
+            System.out.println("That directory already exists.");
+            return;
+        }
+        else {
+            try {
+                channelSftp.mkdir(newdir);
+            } catch (SftpException e) {
+                e.printStackTrace();
+            }
         }
     }
 
