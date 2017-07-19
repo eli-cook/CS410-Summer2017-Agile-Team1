@@ -1,9 +1,8 @@
-/**
+package SFTP; /**
  * Created by Sean on 7/13/2017.
  */
 
 import com.jcraft.jsch.*;
-
 import java.util.Scanner;
 
 public class SFTP {

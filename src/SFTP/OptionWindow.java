@@ -1,3 +1,5 @@
+package SFTP;
+
 import com.jcraft.jsch.*;
 
 import java.util.Scanner;
