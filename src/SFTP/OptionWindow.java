@@ -2,6 +2,7 @@ import com.jcraft.jsch.*;
 
 import java.util.Scanner;
 import java.util.Vector;
+import java.io.File;
 
 /**
  * Created by Sean on 7/15/2017.
@@ -28,11 +29,44 @@ public class OptionWindow {
             if(command.equals("ls")){
                 ls();
             }
+            else if (command.equals("mkdir")) {
+                mkdir();
+            }
             else if (command.equals("logoff")){
                 return;
             }
         }
     }
+
+    private static void upload(){
+        String target = null;
+        System.out.println("Select a local file to upload");
+    }
+
+    private static void download(){
+
+    }
+
+    private static void lslocal(){
+        //https://stackoverflow.com/questions/15598657/how-to-use-ls-c-command-in-java
+        //https://docs.oracle.com/javase/7/docs/api/java/io/File.html
+
+    }
+
+    // How to handle overwriting an existing directory.
+    private static void mkdir(){
+        String newdir = null;
+        System.out.println("Enter the name of the new directory:");
+        newdir = in.nextLine();
+        try {
+            channelSftp.mkdir(newdir);
+        }
+        catch(SftpException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
     private static void ls(){
         try {
             int counter = 0;
