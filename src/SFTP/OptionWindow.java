@@ -1,7 +1,9 @@
-package SFTP;
+
 
 import com.jcraft.jsch.*;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -14,6 +16,7 @@ public class OptionWindow {
     public static Session session = null;
     public static Channel channel = null;
     public static ChannelSftp channelSftp = null;
+    public static File myDirectory = null;
     public OptionWindow(Scanner in, JSch client, Session session, Channel channel, ChannelSftp channelSftp){
         this.in = in;
         this.client = client;
@@ -23,19 +26,35 @@ public class OptionWindow {
     }
     public void CaseWindow(){
         String command;
+        myDirectory = new File(".");
         while(true){
             System.out.print("$ ");
             command = null;
             command = in.nextLine();
-            if(command.equals("ls")){
-                ls();
+            if(command.equals("sls")){
+                sls();
+            }
+            else if (command.equals("cls")){
+                cls();
             }
             else if (command.equals("logoff")){
                 return;
             }
+            else if (command.contains(" ")){
+                String command2;
+                command2 = command.substring(command.indexOf(" "));
+                command = command.substring(0,command.indexOf(" "));
+                if(command.equals("scd")){
+                    scd(command2);
+                }
+                else if(command.equals("ccd")){
+                    ccd(command2);
+                }
+            }
         }
     }
-    private static void ls(){
+    //Used to display the current directory of the server
+    private static void sls(){
         try {
             int counter = 0;
             Vector filelist = channelSftp.ls(channelSftp.pwd());
@@ -54,5 +73,21 @@ public class OptionWindow {
         }catch (SftpException e){
             e.printStackTrace();
         }
+    }
+    //Used to display the current directory of the local machine
+    private static void cls(){
+        try {
+            System.out.println(myDirectory.getCanonicalPath());
+        }catch(IOException e){
+            System.out.println("Could not print your current directory.");
+        }
+    }
+    //Used to traverse to a different directory on the server
+    private static void scd(String toFind){
+
+    }
+    //Used to traverse to a different directory on the local machine
+    private static void ccd(String toFind){
+
     }
 }

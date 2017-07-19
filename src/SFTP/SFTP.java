@@ -1,4 +1,4 @@
-package SFTP; /**
+ /**
  * Created by Sean on 7/13/2017.
  */
 
