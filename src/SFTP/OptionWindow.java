@@ -26,13 +26,13 @@ public class OptionWindow {
     }
     public void CaseWindow(){
         String command;
-        myDirectory = new File(".");
+        myDirectory = new File(".");//Use myDirectory to traverse the local machines files
         while(true){
             System.out.print("$ ");
             command = null;
             command = in.nextLine();
-            if(command.equals("sls")){
-                sls();
+            if(command.equals("ls")){
+                ls();
             }
             else if (command.equals("cls")){
                 cls();
@@ -44,8 +44,8 @@ public class OptionWindow {
                 String command2;
                 command2 = command.substring(command.indexOf(" "));
                 command = command.substring(0,command.indexOf(" "));
-                if(command.equals("scd")){
-                    scd(command2);
+                if(command.equals("cd")){
+                    cd(command2);
                 }
                 else if(command.equals("ccd")){
                     ccd(command2);
@@ -54,7 +54,7 @@ public class OptionWindow {
         }
     }
     //Used to display the current directory of the server
-    private static void sls(){
+    private static void ls(){
         try {
             int counter = 0;
             Vector filelist = channelSftp.ls(channelSftp.pwd());
@@ -76,14 +76,26 @@ public class OptionWindow {
     }
     //Used to display the current directory of the local machine
     private static void cls(){
+        int counter = 0;
+        File directoryFiles [] = myDirectory.listFiles();
         try {
-            System.out.println(myDirectory.getCanonicalPath());
+            System.out.println("Files within" + myDirectory.getCanonicalPath() + ":");
+            for(File temp: directoryFiles){
+                System.out.print(temp.getName()+ "\t");
+                if(counter == 3) {
+                    counter = 0;
+                    System.out.println();
+                }
+                else
+                    ++counter;
+            }
         }catch(IOException e){
             System.out.println("Could not print your current directory.");
         }
+        System.out.println();
     }
     //Used to traverse to a different directory on the server
-    private static void scd(String toFind){
+    private static void cd(String toFind){
 
     }
     //Used to traverse to a different directory on the local machine
