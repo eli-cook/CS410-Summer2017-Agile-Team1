@@ -48,6 +48,7 @@ public class SFTP {
 =======
                 session = client.getSession(username, hostname, PORT);
                 session.setPassword(password);
+>>>>>>> d160cf436161079286b9b2f774f3064450e7f923
                 session.connect();
                 channel = session.openChannel("sftp");
                 channel = session.openChannel("sftp");

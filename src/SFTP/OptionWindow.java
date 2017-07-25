@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
 import java.util.Vector;
+import java.io.File;
 
 import static com.jcraft.jsch.ChannelSftp.SSH_FX_NO_SUCH_FILE;
 
