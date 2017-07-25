@@ -37,7 +37,6 @@ public class OptionWindow {
             if(command.equals("ls")){
                 ls();
             }
-<<<<<<< HEAD
             else if (command.equals("cls")){
                 cls();
             }
@@ -48,11 +47,9 @@ public class OptionWindow {
             {
                 mkdir(command.substring(6));
             }
-=======
             else if (command.equals("mkdir")) {
                 mkdir();
             }
->>>>>>> d160cf436161079286b9b2f774f3064450e7f923
             else if (command.equals("logoff")){
                 return;
             }
@@ -70,9 +67,7 @@ public class OptionWindow {
         }
     }
 
-<<<<<<< HEAD
     //Used to display the current directory of the server
-=======
     private static void upload(){
         String target = null;
         System.out.println("Select a local file to upload");
@@ -88,37 +83,6 @@ public class OptionWindow {
 
     }
 
-    // How to handle overwriting an existing directory: Current solution is to output an error message.
-    // How to handle invalid directory names: Same approach as above.
-    private static void mkdir(){
-        String newdir = null;
-        System.out.println("Enter the name of the new directory:");
-        newdir = in.nextLine();
-
-        // Check for invalid characters before building the File object using a blacklist.
-        // indexOf will return -1 if the input does not exist in the string array.
-        if(newdir.indexOf("<") != - 1 || newdir.indexOf(">") != -1 || newdir.indexOf("%") != -1 || newdir.indexOf(":") != -1
-                || newdir.contentEquals(".") || newdir.contentEquals("..")){
-            System.out.println("Invalid characters are in your new directory name, directory creation aborted.");
-            return;
-        }
-
-        File check = new File(newdir);
-
-        if(check.exists()){
-            System.out.println("That directory already exists.");
-            return;
-        }
-        else {
-            try {
-                channelSftp.mkdir(newdir);
-            } catch (SftpException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
->>>>>>> d160cf436161079286b9b2f774f3064450e7f923
     private static void ls(){
         try {
             int counter = 0;
