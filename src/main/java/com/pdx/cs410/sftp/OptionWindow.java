@@ -8,6 +8,8 @@ import java.nio.file.Paths;
 import java.util.Scanner;
 import java.util.Vector;
 
+import static com.jcraft.jsch.ChannelSftp.SSH_FX_NO_SUCH_FILE;
+
 /**
  * Created by Sean on 7/15/2017.
  */
@@ -37,6 +39,13 @@ public class OptionWindow {
             }
             else if (command.equals("cls")){
                 cls();
+            }
+            else if(command.startsWith("mkdir ") && (command.length() > 6))
+            {
+                mkdir(command.substring(6));
+            }
+            else if (command.equals("mkdir")) {
+                mkdir();
             }
             else if (command.equals("logoff")){
                 return;
@@ -114,5 +123,79 @@ public class OptionWindow {
         } catch (SftpException e) {
             e.printStackTrace();
         }
+    }
+
+    // Used to create a directory within the current directory.
+    private static void mkdir(){
+        String newdir = null;
+        System.out.println("Enter the name of the new directory:");
+        newdir = in.nextLine();
+
+        // Check for invalid characters before building the File object using a blacklist.
+        // indexOf will return -1 if the input does not exist in the string array.
+        if(newdir.indexOf("<") != - 1 || newdir.indexOf(">") != -1 || newdir.indexOf("%") != -1 || newdir.indexOf(":") != -1
+                || newdir.contentEquals(".") || newdir.contentEquals("..")){
+            System.out.println("Invalid characters are in your new directory name, directory creation aborted.");
+            return;
+        }
+
+        try{
+            channelSftp.lstat(newdir);
+        }
+        catch(SftpException e) {
+            try {
+                channelSftp.mkdir(newdir);
+            } catch (SftpException f) {
+                if(f.id == SSH_FX_NO_SUCH_FILE) {
+                    System.out.println("The directory referenced does not exist.");
+                    return;
+                }
+
+                // Otherwise something else happened.
+                f.printStackTrace();
+            }
+
+            return;
+        }
+
+        // Otherwise the directory or file already exists.
+        System.out.println("That directory already exists.");
+        return;
+
+    }
+
+    // mkdir variation that accepts a string in the same manner as the mkdir linux command.
+    public static void mkdir(String newdir)
+    {
+        // Check for invalid characters before building the File object using a blacklist.
+        // indexOf will return -1 if the input does not exist in the string array.
+        if(newdir.indexOf("<") != - 1 || newdir.indexOf(">") != -1 || newdir.indexOf("%") != -1 || newdir.indexOf(":") != -1
+                || newdir.contentEquals(".") || newdir.contentEquals("..")){
+            System.out.println("Invalid characters are in your new directory name, directory creation aborted.");
+            return;
+        }
+
+        try{
+            channelSftp.lstat(newdir);
+        }
+        catch(SftpException e) {
+            try {
+                channelSftp.mkdir(newdir);
+            } catch (SftpException f) {
+                if (f.id == SSH_FX_NO_SUCH_FILE) {
+                    System.out.println("The directory referenced does not exist.");
+                    return;
+                }
+
+                // Otherwise something else happened.
+                f.printStackTrace();
+            }
+
+            return;
+        }
+
+        // Otherwise the directory or file already exists.
+        System.out.println("That directory already exists.");
+        return;
     }
 }

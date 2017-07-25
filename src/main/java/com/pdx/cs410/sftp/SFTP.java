@@ -29,7 +29,7 @@ public class SFTP {
         while(!lockDown){
             System.out.print("Please enter a hostname: ");
             hostname = in.nextLine();
-            System.out.print("Enter a port number:");
+            System.out.print("Enter a port number: ");
             PORT = in.nextInt();
             in.nextLine();
             System.out.print("Enter your username: ");
@@ -37,8 +37,10 @@ public class SFTP {
             System.out.print("Enter your password: ");
             password = in.nextLine();
             try{
-                session = client.getSession("pater2", "linux.cs.pdx.edu", 22);
-                session.setPassword("Kayle077r");
+                //session = client.getSession("pater2", "linux.cs.pdx.edu", 22);
+                //session.setPassword("Kayle077r");
+                session = client.getSession(username, hostname, PORT);
+                session.setPassword(password);
                 session.connect();
                 channel = session.openChannel("sftp");
                 channel.connect();
