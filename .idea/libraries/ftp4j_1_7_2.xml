@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="ftp4j-1.7.2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/src/out/production/CS410-Summer2017-Agile-Team1/FTP_Wrapper/ftp4j-1.7.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
