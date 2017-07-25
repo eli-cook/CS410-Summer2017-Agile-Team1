@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="CS410-Summer2017-Agile-Team1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/src/out/production/CS410-Summer2017-Agile-Team1/jsch-0.1.54.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/out/production/CS410-Summer2017-Agile-Team1/ftp4j-1.7.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

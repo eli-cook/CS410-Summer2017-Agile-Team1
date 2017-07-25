@@ -3,6 +3,7 @@
  */
 
 import com.jcraft.jsch.*;
+
 import java.util.Scanner;
 
 public class SFTP {
@@ -29,7 +30,7 @@ public class SFTP {
         while(!lockDown){
             System.out.print("Please enter a hostname: ");
             hostname = in.nextLine();
-            System.out.print("Enter a port number:");
+            System.out.print("Enter a port number: ");
             PORT = in.nextInt();
             in.nextLine();
             System.out.print("Enter your username: ");
@@ -37,19 +38,30 @@ public class SFTP {
             System.out.print("Enter your password: ");
             password = in.nextLine();
             try{
-                session = client.getSession("pater2", "linux.cs.pdx.edu", 22);
-                session.setPassword("Kayle077r");
+<<<<<<< HEAD
+                //session = client.getSession("pater2", "linux.cs.pdx.edu", 22);
+                //session.setPassword("Kayle077r");
+                //session.connect();
+                session = client.getSession(username, hostname, PORT);
+                session.setPassword(password);
+                //session.setPassword("Kayle077r");
+=======
+                session = client.getSession(username, hostname, PORT);
+                session.setPassword(password);
+>>>>>>> d160cf436161079286b9b2f774f3064450e7f923
                 session.connect();
+                channel = session.openChannel("sftp");
                 channel = session.openChannel("sftp");
                 channel.connect();
                 channelSftp = (ChannelSftp) channel;
                 lockDown = true;
             }catch(JSchException e){
-                System.out.println("You were not logged into " + hostname + "due to a login error.");
+                System.out.println("You were not logged into " + hostname + " due to a login error.");
                 System.out.print("Would you like to try again? (Y/N) ");
                 answer = in.nextLine();
-                if(answer.contentEquals("no"))
+                if(answer.equalsIgnoreCase("n") || answer.equalsIgnoreCase("no"))
                     return lockDown;
+                // Create else statement that handles Y/y/yes unless toupper is auto, currently not auto.
             }
         }
         return lockDown;
