@@ -20,54 +20,55 @@ public class OptionWindow {
     public static Channel channel = null;
     public static ChannelSftp channelSftp = null;
     public static File myDirectory = null;
-    public OptionWindow(Scanner in, JSch client, Session session, Channel channel, ChannelSftp channelSftp){
+
+    public OptionWindow(Scanner in, JSch client, Session session, Channel channel, ChannelSftp channelSftp) {
         this.in = in;
         this.client = client;
         this.session = session;
         this.channel = channel;
         this.channelSftp = channelSftp;
     }
-    public void CaseWindow(){
+
+    public void CaseWindow() {
         String command;
         myDirectory = new File(".");//Use myDirectory to traverse the local machines files
-        while(true){
+        while (true) {
             System.out.print("$ ");
             command = null;
             command = in.nextLine();
-            if(command.equals("ls")){
+            if (command.equals("ls")) {
                 ls();
-            }
-            else if (command.equals("cls")){
+            } else if (command.equals("cls")) {
                 cls();
-            }
-            else if(command.startsWith("mkdir ") && (command.length() > 6))
-            {
+            } else if (command.startsWith("mkdir ") && (command.length() > 6)) {
                 mkdir(command.substring(6));
-            }
-            else if (command.equals("mkdir")) {
+            } else if (command.equals("mkdir")) {
                 mkdir();
-            }
-            else if (command.equals("logoff")){
+            } else if (command.equals("logoff")) {
                 return;
-            }
-            else if (command.contains(" ")){
+            } else if (command.contains(" ")) {
                 String command2;
-                command2 = command.substring(command.indexOf(" "));
-                command = command.substring(0,command.indexOf(" "));
-                if(command.equals("cd")){
+                command2 = command.substring(command.indexOf(" ")+1);
+                command = command.substring(0, command.indexOf(" "));
+                if (command.equals("cd")) {
                     cd(command2);
-                }
-                else if(command.equals("ccd")){
+                } else if (command.equals("ccd")) {
                     ccd(command2);
-                }
-                else if(command.equals("get")) {
+                } else if (command.equals("get")) {
                     get(command2);
+                }
+                  else if (command.equals("rename")){
+                    rename(command2);
+                }
+                  else if (command.equals("crename")){
+                    crename(command2);
                 }
             }
         }
     }
+
     //Used to display the current directory of the server
-    private static void ls(){
+    private static void ls() {
         try {
             int counter = 0;
             Vector filelist = channelSftp.ls(channelSftp.pwd());
@@ -76,47 +77,48 @@ public class OptionWindow {
                 ChannelSftp.LsEntry entry = (ChannelSftp.LsEntry) filelist.get(i);
                 if (entry.getFilename().charAt(0) != '.') {
                     System.out.print(entry.getFilename() + '\t');
-                    if(counter == 3) {
+                    if (counter == 3) {
                         System.out.println("\n");
                         counter = 0;
-                    }
-                    else ++counter;
+                    } else ++counter;
                 }
             }
-        }catch (SftpException e){
+        } catch (SftpException e) {
             e.printStackTrace();
         }
     }
+
     //Used to display the current directory of the local machine
-    private static void cls(){
+    private static void cls() {
         int counter = 0;
-        File directoryFiles [] = myDirectory.listFiles();
+        File directoryFiles[] = myDirectory.listFiles();
         try {
             System.out.println("Files within" + myDirectory.getCanonicalPath() + ":");
-            for(File temp: directoryFiles){
-                System.out.print(temp.getName()+ "\t");
-                if(counter == 3) {
+            for (File temp : directoryFiles) {
+                System.out.print(temp.getName() + "\t");
+                if (counter == 3) {
                     counter = 0;
                     System.out.println();
-                }
-                else
+                } else
                     ++counter;
             }
-        }catch(IOException e){
+        } catch (IOException e) {
             System.out.println("Could not print your current directory.");
         }
         System.out.println();
     }
+
     //Used to traverse to a different directory on the server
-    private static void cd(String toFind){
+    private static void cd(String toFind) {
 
     }
+
     //Used to traverse to a different directory on the local machine
-    private static void ccd(String toFind){
+    private static void ccd(String toFind) {
 
     }
-
-    private static void get (String toFind) {
+    //Used to retrieve a file from remote server and put it on local machine
+    private static void get(String toFind) {
         String path = myDirectory.getAbsolutePath();
         try {
             channelSftp.get(toFind, path);
@@ -126,59 +128,22 @@ public class OptionWindow {
     }
 
     // Used to create a directory within the current directory.
-    private static void mkdir(){
+    private static void mkdir() {
         String newdir = null;
         System.out.println("Enter the name of the new directory:");
         newdir = in.nextLine();
 
         // Check for invalid characters before building the File object using a blacklist.
         // indexOf will return -1 if the input does not exist in the string array.
-        if(newdir.indexOf("<") != - 1 || newdir.indexOf(">") != -1 || newdir.indexOf("%") != -1 || newdir.indexOf(":") != -1
-                || newdir.contentEquals(".") || newdir.contentEquals("..")){
+        if (newdir.indexOf("<") != -1 || newdir.indexOf(">") != -1 || newdir.indexOf("%") != -1 || newdir.indexOf(":") != -1
+                || newdir.contentEquals(".") || newdir.contentEquals("..")) {
             System.out.println("Invalid characters are in your new directory name, directory creation aborted.");
             return;
         }
 
-        try{
+        try {
             channelSftp.lstat(newdir);
-        }
-        catch(SftpException e) {
-            try {
-                channelSftp.mkdir(newdir);
-            } catch (SftpException f) {
-                if(f.id == SSH_FX_NO_SUCH_FILE) {
-                    System.out.println("The directory referenced does not exist.");
-                    return;
-                }
-
-                // Otherwise something else happened.
-                f.printStackTrace();
-            }
-
-            return;
-        }
-
-        // Otherwise the directory or file already exists.
-        System.out.println("That directory already exists.");
-        return;
-
-    }
-
-    // mkdir variation that accepts a string in the same manner as the mkdir linux command.
-    public static void mkdir(String newdir)
-    {
-        // Check for invalid characters before building the File object using a blacklist.
-        // indexOf will return -1 if the input does not exist in the string array.
-        if(newdir.indexOf("<") != - 1 || newdir.indexOf(">") != -1 || newdir.indexOf("%") != -1 || newdir.indexOf(":") != -1
-                || newdir.contentEquals(".") || newdir.contentEquals("..")){
-            System.out.println("Invalid characters are in your new directory name, directory creation aborted.");
-            return;
-        }
-
-        try{
-            channelSftp.lstat(newdir);
-        }
-        catch(SftpException e) {
+        } catch (SftpException e) {
             try {
                 channelSftp.mkdir(newdir);
             } catch (SftpException f) {
@@ -197,5 +162,69 @@ public class OptionWindow {
         // Otherwise the directory or file already exists.
         System.out.println("That directory already exists.");
         return;
+
+    }
+
+    // mkdir variation that accepts a string in the same manner as the mkdir linux command.
+    public static void mkdir(String newdir) {
+        // Check for invalid characters before building the File object using a blacklist.
+        // indexOf will return -1 if the input does not exist in the string array.
+        if (newdir.indexOf("<") != -1 || newdir.indexOf(">") != -1 || newdir.indexOf("%") != -1 || newdir.indexOf(":") != -1
+                || newdir.contentEquals(".") || newdir.contentEquals("..")) {
+            System.out.println("Invalid characters are in your new directory name, directory creation aborted.");
+            return;
+        }
+
+        try {
+            channelSftp.lstat(newdir);
+        } catch (SftpException e) {
+            try {
+                channelSftp.mkdir(newdir);
+            } catch (SftpException f) {
+                if (f.id == SSH_FX_NO_SUCH_FILE) {
+                    System.out.println("The directory referenced does not exist.");
+                    return;
+                }
+
+                // Otherwise something else happened.
+                f.printStackTrace();
+            }
+
+            return;
+        }
+
+        // Otherwise the directory or file already exists.
+        System.out.println("That directory already exists.");
+        return;
+    }
+
+    // rename a file on the server side
+    public static void rename(String FileNames) {
+        String toChange;
+        String newName;
+        if(!FileNames.contains(" ")){
+            System.out.println("Command not of the correct form.");
+            return;
+        }
+        newName = FileNames.substring(FileNames.indexOf(" ")+1);
+        FileNames = FileNames.substring(0, FileNames.indexOf(" "));
+        System.out.println(FileNames);
+        System.out.println(newName);
+        try{
+            channelSftp.lstat(FileNames);
+        }catch(SftpException e) {
+            System.out.println("Filename does not exist.");
+            return;
+        }
+        try {
+            channelSftp.rename(FileNames, newName);
+        }catch(SftpException e) {
+            System.out.println("Could not change filename.");
+        }
+
+    }
+    // rename a file  on the local machine
+    public static void crename(String FileNames){
+
     }
 }
