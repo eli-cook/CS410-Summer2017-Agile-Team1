@@ -4,6 +4,7 @@ import com.jcraft.jsch.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
 import java.util.Vector;
@@ -110,12 +111,44 @@ public class OptionWindow {
 
     //Used to traverse to a different directory on the server
     private static void cd(String toFind) {
-
+        try {
+            channelSftp.cd(toFind.trim());
+        }
+        catch(SftpException e){
+            System.out.println("cd failed: " + e.toString());
+        }
     }
 
     //Used to traverse to a different directory on the local machine
     private static void ccd(String toFind) {
+        Path myDirectoryPath = myDirectory.toPath();
+        Path toFindPath = Paths.get(toFind.trim());
 
+        if(toFindPath.isAbsolute()){
+            myDirectoryPath = toFindPath;
+        }
+        else{
+            myDirectoryPath = myDirectoryPath.resolve(toFindPath);
+        }
+
+        try{
+            myDirectoryPath.toRealPath();
+        }
+        catch(IOException e) {
+            System.out.println("IOException: " + e.toString());
+        }
+        catch(SecurityException e) {
+            System.out.println("SecurityException: " + e.toString());
+        }
+
+        File temp = myDirectoryPath.toFile();
+
+        if(temp.isDirectory()){
+            myDirectory = temp;
+        }
+        else {
+            System.out.println("Cannot find directory:" + myDirectoryPath.toString());
+        }
     }
     //Used to retrieve a file from remote server and put it on local machine
     private static void get(String toFind) {
