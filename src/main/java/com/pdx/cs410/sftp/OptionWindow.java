@@ -121,6 +121,13 @@ public class OptionWindow {
 
     //Used to traverse to a different directory on the local machine
     private static void ccd(String toFind) {
+        if(toFind.equals("..")){
+            try {
+                myDirectory = new File(myDirectory.getCanonicalPath());
+                myDirectory = new File(myDirectory.getParent());
+                return;
+            }catch(IOException e){}
+        }
         Path myDirectoryPath = myDirectory.toPath();
         Path toFindPath = Paths.get(toFind.trim());
 
