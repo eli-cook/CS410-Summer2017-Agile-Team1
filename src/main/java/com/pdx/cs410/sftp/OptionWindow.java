@@ -240,7 +240,6 @@ public class OptionWindow {
 
     // rename a file on the server side
     public static void rename(String FileNames) {
-        String toChange;
         String newName;
         if(!FileNames.contains(" ")){
             System.out.println("Command not of the correct form.");
@@ -248,8 +247,6 @@ public class OptionWindow {
         }
         newName = FileNames.substring(FileNames.indexOf(" ")+1);
         FileNames = FileNames.substring(0, FileNames.indexOf(" "));
-        System.out.println(FileNames);
-        System.out.println(newName);
         try{
             channelSftp.lstat(FileNames);
         }catch(SftpException e) {
@@ -265,6 +262,19 @@ public class OptionWindow {
     }
     // rename a file  on the local machine
     public static void crename(String FileNames){
-
+        String newName;
+        if(!FileNames.contains(" ")){
+            System.out.println("Command not of the correct form.");
+            return;
+        }
+        newName = FileNames.substring(FileNames.indexOf(" ")+1);
+        FileNames = FileNames.substring(0, FileNames.indexOf(" "));
+            File nameToChange = new File(myDirectory.getAbsolutePath()+ "\\" + FileNames);
+            File nameToChangeTo = new File(myDirectory.getAbsolutePath() + "\\" + newName);
+        if(nameToChangeTo.exists()){
+            System.out.println("Desired new file name ");
+            return;
+        }
+        nameToChange.renameTo(nameToChangeTo);
     }
 }
