@@ -45,6 +45,10 @@ public class OptionWindow {
                 mkdir(command.substring(6));
             } else if (command.equals("mkdir")) {
                 mkdir();
+
+            } else if (command.startsWith("chmod "))
+            {
+                chmod(command);
             } else if (command.equals("logoff")) {
                 return;
             } else if (command.contains(" ")) {
@@ -277,4 +281,212 @@ public class OptionWindow {
         }
         nameToChange.renameTo(nameToChangeTo);
     }
+
+    // Change the permissions of a file or directory.
+    private void chmod(String compact) {
+        // Ideally split the string into 3 parts: the chmod command, the permissions portions (parsed on +),
+        // and the file name.
+        String[] part = compact.split("\\s+");
+
+        int permissions = 0;
+        String octal = null;
+
+        // Either retrieves the current permissions of the file or directory, or throws an error if it doesn't exist.
+        SftpATTRS target = null;
+
+        try{
+            target = channelSftp.lstat(part[2]);
+            octal = Integer.toOctalString(target.getPermissions());
+        }
+        catch (SftpException e){
+            System.out.println("The requested file or directory does not exist.");
+            return;
+        }
+        catch(IndexOutOfBoundsException e){
+            System.out.println("No target file or directory detected.");
+            return;
+        }
+
+        // Attempt to parse the second element to an int before deciding what permissions to change.
+        try {
+            permissions = Integer.parseInt(part[1], 8);
+        }
+        catch (NumberFormatException e) {
+            // Only gets here if the permissions string was not an integer.
+            // Convert the permissions to a decimal representation.
+            // May need to use octal instead of decimal.
+
+            String[] fields = part[1].split(",");
+
+            // Flag multipliers for what type of user permissions are changed.
+            int multiplierU = 0;
+            int multiplierG = 0;
+            int multiplierO = 0;
+
+            for (int i = 0; i < fields.length; ++i) {
+                permissions = 0;
+
+                // Default the multipliers.
+                multiplierU = 0;
+                multiplierG = 0;
+                multiplierO = 0;
+
+                // Refresh the octal code prior to an iteration.
+                try{
+                    target = channelSftp.lstat(part[2]);
+                    octal = Integer.toOctalString(target.getPermissions());
+                }
+                catch (SftpException f)
+                {
+                    f.printStackTrace();
+                }
+
+                if (fields[i].contains("u"))
+                    multiplierU = 100;
+
+                if (fields[i].contains("g"))
+                    multiplierG = 10;
+
+                if (fields[i].contains("o"))
+                    multiplierO = 1;
+
+                // Handles setting and overriding existing permissions.
+                if (fields[i].contains("="))
+                {
+                    // Handles the regex for read permissions.
+                    if (fields[i].contains("r"))
+                        permissions += 4 * (multiplierU + multiplierG + multiplierO);
+                    else{
+                        if(!fields[i].matches(".*u.*") && octal.matches(".*[4567][01234567][01234567]"))
+                            permissions += 400;
+
+                        if (!fields[i].matches(".*g.*") && octal.matches(".*[4567][01234567]"))
+                            permissions += 40;
+
+                        if (!fields[i].matches(".*o.*") && octal.matches(".*[4567]"))
+                            permissions += 4;
+                    }
+
+                    // Handles the regex for write permissions.
+                    if (fields[i].contains("w"))
+                        permissions += 2 * (multiplierU + multiplierG + multiplierO);
+                    else{
+                        if(!fields[i].matches(".*u.*") && octal.matches(".*[2367][01234567][01234567]"))
+                            permissions += 200;
+
+                        if (!fields[i].matches(".*g.*") && octal.matches(".*[2367][01234567]"))
+                            permissions += 20;
+
+                        if (!fields[i].matches(".*o.*") && octal.matches(".*[2367]"))
+                            permissions += 2;
+                    }
+
+                    // Handles the regex for execute permissions.
+                    if (fields[i].contains("e") || fields[i].contains("x"))
+                        permissions += multiplierU + multiplierG + multiplierO;
+                    else{
+                        if (!fields[i].matches(".*u.*") && octal.matches(".*[1357][01234567][01234567]"))
+                            permissions += 100;
+
+                        if (!fields[i].matches(".*g.*") && octal.matches(".*[1357][01234567]"))
+                            permissions += 10;
+
+                        if (!fields[i].matches(".*o.*") && octal.matches(".*[1357]"))
+                            permissions += 1;
+                    }
+                }
+                else if (fields[i].contains("+")) {
+                    // Handles the regex for read permissions.
+                    if (fields[i].contains("r"))
+                        permissions += 4 * (multiplierU + multiplierG + multiplierO);
+
+                    if(!fields[i].matches(".*u.*r.*") && octal.matches(".*[4567][01234567][01234567]"))
+                        permissions += 400;
+
+                    if (!fields[i].matches(".*g.*r.*") && octal.matches(".*[4567][01234567]"))
+                        permissions += 40;
+
+                    if (!fields[i].matches(".*o.*r.*") && octal.matches(".*[4567]"))
+                        permissions += 4;
+
+                    // Handles the regex for write permissions.
+                    if (fields[i].contains("w"))
+                        permissions += 2 * (multiplierU + multiplierG + multiplierO);
+
+                    if(!fields[i].matches(".*u.*w.*") && octal.matches(".*[2367][01234567][01234567]"))
+                        permissions += 200;
+
+                    if (!fields[i].matches(".*g.*w.*") && octal.matches(".*[2367][01234567]"))
+                        permissions += 20;
+
+                    if (!fields[i].matches(".*o.*w.*") && octal.matches(".*[2367]"))
+                        permissions += 2;
+
+                    // Handles the regex for execute permissions.
+                    if (fields[i].contains("e") || fields[i].contains("x"))
+                        permissions += multiplierU + multiplierG + multiplierO;
+
+                    if (!fields[i].matches(".*u.*[ex].*") && octal.matches(".*[1357][01234567][01234567]"))
+                        permissions += 100;
+
+                    if (!fields[i].matches(".*g.*[ex].*") && octal.matches(".*[1357][01234567]"))
+                        permissions += 10;
+
+                    if (!fields[i].matches(".*o.*[ex].*") && octal.matches(".*[1357]"))
+                        permissions += 1;
+                }
+                else if(fields[i].contains("-")){
+                    // Handles the removal of permissions by omitting the case where it is contained.
+                    if(!fields[i].matches(".*u.*r.*") && octal.matches(".*[4567][01234567][01234567]"))
+                        permissions += 400;
+
+                    if (!fields[i].matches(".*g.*r.*") && octal.matches(".*[4567][01234567]"))
+                        permissions += 40;
+
+                    if (!fields[i].matches(".*o.*r.*") && octal.matches(".*[4567]"))
+                        permissions += 4;
+
+                    if(!fields[i].matches(".*u.*w.*") && octal.matches(".*[2367][01234567][01234567]"))
+                        permissions += 200;
+
+                    if (!fields[i].matches(".*g.*w.*") && octal.matches(".*[2367][01234567]"))
+                        permissions += 20;
+
+                    if (!fields[i].matches(".*o.*w.*") && octal.matches(".*[2367]"))
+                        permissions += 2;
+
+                    if (!fields[i].matches(".*u.*[ex].*") && octal.matches(".*[1357][01234567][01234567]"))
+                        permissions += 100;
+
+                    if (!fields[i].matches(".*g.*[ex].*") && octal.matches(".*[1357][01234567]"))
+                        permissions += 10;
+
+                    if (!fields[i].matches(".*o.*[ex].*") && octal.matches(".*[1357]"))
+                        permissions += 1;
+                }
+                else
+                {
+                    System.out.println("Invalid command, operand +, -, =, or octal code omitted.");
+                }
+
+                // Try to change the permissions of that file or directory by string conversions.
+                try {
+                    channelSftp.chmod(Integer.parseInt(Integer.toString(permissions), 8), part[2]);
+                } catch (SftpException f) {
+                    f.printStackTrace();
+                }
+            }
+
+            return;
+        }
+
+        // Try to change the permissions of that file or directory with the provided integer.
+        try {
+            channelSftp.chmod(permissions, part[2]);
+        } catch (SftpException f) {
+            f.printStackTrace();
+        }
+        return;
+    }
 }
+
