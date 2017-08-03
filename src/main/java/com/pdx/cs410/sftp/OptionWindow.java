@@ -263,8 +263,7 @@ public class OptionWindow {
             e.printStackTrace();
         }
     }
-
-}
+    
     // rename a file on the server side
     public static void rename(String FileNames) {
         String newName;
