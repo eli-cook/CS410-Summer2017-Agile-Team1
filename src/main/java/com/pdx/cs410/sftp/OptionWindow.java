@@ -57,14 +57,13 @@ public class OptionWindow {
                     ccd(command2);
                 } else if (command.equals("get")) {
                     get(command2);
-                }
-                  else if(command.equals("rm")) {
+                } else if (command.equals("put")) {
+                    put(command2);
+                } else if(command.equals("rm")) {
                     rm(command2);
-                }
-                  else if (command.equals("rename")){
+                } else if (command.equals("rename")){
                     rename(command2);
-                }
-                  else if (command.equals("crename")){
+                } else if (command.equals("crename")){
                     crename(command2);
                 }
             }
@@ -97,7 +96,7 @@ public class OptionWindow {
         int counter = 0;
         File directoryFiles[] = myDirectory.listFiles();
         try {
-            System.out.println("Files within" + myDirectory.getCanonicalPath() + ":");
+            System.out.println("Files within " + myDirectory.getCanonicalPath() + ":");
             for (File temp : directoryFiles) {
                 System.out.print(temp.getName() + "\t");
                 if (counter == 3) {
@@ -169,7 +168,20 @@ public class OptionWindow {
             e.printStackTrace();
         }
     }
-
+   //Puts a file onto the server
+    private static void put(String toFind) {
+        String path = null;
+        try {
+            path = channelSftp.pwd();
+        } catch (SftpException e) {
+            e.printStackTrace();
+        }
+        try {
+            channelSftp.put(toFind, path, toFind.length());
+        } catch (SftpException e) {
+            e.printStackTrace();
+        }
+    }
     // Used to create a directory within the current directory.
     private static void mkdir() {
         String newdir = null;
