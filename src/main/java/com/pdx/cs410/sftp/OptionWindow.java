@@ -58,6 +58,9 @@ public class OptionWindow {
                 } else if (command.equals("get")) {
                     get(command2);
                 }
+                  else if(command.equals("rm")) {
+                    rm(command2);
+                }
                   else if (command.equals("rename")){
                     rename(command2);
                 }
@@ -238,6 +241,30 @@ public class OptionWindow {
         return;
     }
 
+
+    // used to remove a single file or directory from the remote server
+    private static void rm (String target) {
+
+        boolean isDir = false;
+
+        // strip any whitespace from the target String (if remove multiple is included, this will need to be removed)
+        target = target.replaceAll("\\s", "");
+
+        try {
+            isDir = channelSftp.stat(target).isDir();
+
+            if (isDir) {
+                channelSftp.rmdir(target);
+            } else {
+                channelSftp.rm(target);
+            }
+
+        } catch (SftpException e) {
+            e.printStackTrace();
+        }
+    }
+
+}
     // rename a file on the server side
     public static void rename(String FileNames) {
         String newName;
