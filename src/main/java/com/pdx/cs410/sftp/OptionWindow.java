@@ -177,7 +177,7 @@ public class OptionWindow {
             e.printStackTrace();
         }
         try {
-            channelSftp.put(toFind, path, toFind.length());
+            channelSftp.put(myDirectory.getAbsolutePath()+"\\"+toFind, path, toFind.length());
         } catch (SftpException e) {
             e.printStackTrace();
         }
