@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -65,6 +67,10 @@ public class OptionWindow {
                     rename(command2);
                 } else if (command.equals("crename")){
                     crename(command2);
+                } else if (command.equals("multiget")){
+                    multiget(command2);
+                } else if (command.equals("multiput")){
+                    multiput(command2);
                 }
             }
         }
@@ -166,6 +172,7 @@ public class OptionWindow {
             channelSftp.get(toFind, path);
         } catch (SftpException e) {
             e.printStackTrace();
+            System.out.println("Could not retrieve " + toFind + " to " + path + " (File does not exist).");
         }
     }
    //Puts a file onto the server
@@ -177,9 +184,10 @@ public class OptionWindow {
             e.printStackTrace();
         }
         try {
-            channelSftp.put(toFind, path, toFind.length());
+            channelSftp.put(myDirectory.getAbsolutePath()+"\\"+toFind, path, toFind.length());
         } catch (SftpException e) {
             e.printStackTrace();
+            System.out.println("Could not move "+ toFind + " to " + path + " (File doesn't exist).");
         }
     }
     // Used to create a directory within the current directory.
@@ -314,5 +322,49 @@ public class OptionWindow {
             return;
         }
         nameToChange.renameTo(nameToChangeTo);
+    }
+    //get multiple files from a remove server
+    public static void multiget(String toGet){
+        int indexOf = 0;
+        List<String> Files = new ArrayList<String>();
+        if(!toGet.contains(" ")){
+            get(toGet);
+        }
+        else{
+            while(!toGet.equals("")){
+                    indexOf = toGet.indexOf(" ");
+                    Files.add(toGet.substring(0, indexOf));
+                    toGet = toGet.substring(indexOf + 1);
+                    if(!toGet.contains(" ")){
+                        Files.add(toGet);
+                        toGet = "";
+                    }
+            }
+            for(int i = 0;i < Files.size();++i){
+                get(Files.get(i));
+            }
+        }
+    }
+    //put multiple files on a remote server
+    public static void multiput(String toPut){
+        int indexOf = 0;
+        List<String> Files = new ArrayList<String>();
+        if(!toPut.contains(" ")){
+            put(toPut);
+        }
+        else{
+            while(!toPut.equals("")){
+                indexOf = toPut.indexOf(" ");
+                Files.add(toPut.substring(0, indexOf));
+                toPut = toPut.substring(indexOf + 1);
+                if(!toPut.contains(" ")){
+                    Files.add(toPut);
+                    toPut = "";
+                }
+            }
+            for(int i = 0;i < Files.size();++i){
+                put(Files.get(i));
+            }
+        }
     }
 }
