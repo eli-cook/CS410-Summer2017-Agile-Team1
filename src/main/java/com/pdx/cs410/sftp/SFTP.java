@@ -58,8 +58,6 @@ public class SFTP {
             password = in.nextLine();
 
             try{
-                //session = client.getSession("pater2", "linux.cs.pdx.edu", 22);
-                //session.setPassword("Kayle077r");
                 session = client.getSession(username, hostname, PORT);
                 session.setPassword(password);
                 session.connect();
