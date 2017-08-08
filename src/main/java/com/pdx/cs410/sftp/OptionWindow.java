@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Vector;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static com.jcraft.jsch.ChannelSftp.SSH_FX_NO_SUCH_FILE;
 
@@ -23,6 +25,7 @@ public class OptionWindow {
     public static Channel channel = null;
     public static ChannelSftp channelSftp = null;
     public static File myDirectory = null;
+	public static int timeoutSeconds = 60;
 
     public OptionWindow(Scanner in, JSch client, Session session, Channel channel, ChannelSftp channelSftp) {
         this.in = in;
@@ -36,9 +39,22 @@ public class OptionWindow {
         String command;
         myDirectory = new File(".");//Use myDirectory to traverse the local machines files
         while (true) {
+			TimerTask idleTimeoutExit = new TimerTask()
+            {
+                public void run()
+                {
+                    System.out.println("You have been idle for not entering any commands for " + timeoutSeconds + " seconds.");
+                    System.out.println("Exiting Program.");
+                    session.disconnect();
+                    System.exit(0);
+                }
+            };
+			Timer timer = new Timer();
+			timer.schedule( idleTimeoutExit, timeoutSeconds*1000 );
             System.out.print("$ ");
             command = null;
             command = in.nextLine();
+			timer.cancel();
             if (command.equals("ls")) {
                 ls();
             } else if (command.equals("cls")) {
