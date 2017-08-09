@@ -31,4 +31,6 @@ Next, to import this project do the following:
 * Deletion:
     - File ```rm test.txt```
     - Directory: ```rm myDir```
-
+* Change Directory (Local): ```ccd myDir```
+* Change Directory (Remote): ```cd myDir```
+* Copy Directories on Remote Server: ```cp srcDir destDir```
