@@ -14,6 +14,7 @@ import java.util.Vector;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static com.jcraft.jsch.ChannelSftp.RESUME;
 import static com.jcraft.jsch.ChannelSftp.SSH_FX_NO_SUCH_FILE;
 
 /**
@@ -65,7 +66,10 @@ public class OptionWindow {
             } else if (command.equals("mkdir")) {
                 mkdir();
 
-            } else if (command.startsWith("chmod "))
+            } else if (command.equals("resume")){
+                resume();
+            }
+            else if (command.startsWith("chmod "))
             {
                 chmod(command);
             } else if (command.equals("logoff")) {
@@ -207,7 +211,7 @@ public class OptionWindow {
             e.printStackTrace();
         }
         try {
-            channelSftp.put(myDirectory.getAbsolutePath()+"\\"+toFind, path, toFind.length());
+            channelSftp.put(myDirectory.getAbsolutePath()+"\\"+toFind, path);
         } catch (SftpException e) {
             e.printStackTrace();
             System.out.println("Could not move "+ toFind + " to " + path + " (File doesn't exist).");
@@ -687,5 +691,38 @@ public class OptionWindow {
             System.out.println(e.toString());
         }
     }
+    // Resume an upload or download depending on input.
+    private void resume(){
+        String choice;
+        String target;
+        String dest;
+
+        System.out.println("What sort of task would you like to resume?\nEnter 'put' or 'get': ");
+        choice = in.nextLine();
+
+        System.out.println("Enter the name of the target file or directory to be copied: ");
+        target = in.nextLine();
+
+        // Attempt to resume the process.
+        // Test with mnist_train.csv, showing a file size of 109,575,994 bytes using 'ls -l mnist_train.csv' on the usual
+        // linux client and a rounded size of 107,008 kB on your local machine.
+        // Quickly finishes if the file already exists on both ends.
+        // Complains if the target file does not exist.
+        // If using put without part of the file on the remote end, will basically function as a standard put command.
+        try{
+            // Currently does not use a progress monitor, can implement in a later edition to add a tracker.
+            if(choice.equalsIgnoreCase("get"))
+                channelSftp.get(target, myDirectory.getAbsolutePath(), null, RESUME);
+            else if(choice.equalsIgnoreCase("put"))
+                channelSftp.put(myDirectory.getAbsolutePath() + "\\" + target, channelSftp.pwd(), RESUME);
+        }
+        catch (SftpException e)
+        {
+            e.printStackTrace();
+            System.out.print(target + " could not be copied from.");
+        }
+        return;
+    }
+
 }
 
