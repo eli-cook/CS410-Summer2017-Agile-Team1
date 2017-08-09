@@ -4,12 +4,15 @@ import com.jcraft.jsch.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Vector;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static com.jcraft.jsch.ChannelSftp.SSH_FX_NO_SUCH_FILE;
 
@@ -23,6 +26,7 @@ public class OptionWindow {
     public static Channel channel = null;
     public static ChannelSftp channelSftp = null;
     public static File myDirectory = null;
+	public static int timeoutSeconds = 60;
 
     public OptionWindow(Scanner in, JSch client, Session session, Channel channel, ChannelSftp channelSftp) {
         this.in = in;
@@ -36,9 +40,22 @@ public class OptionWindow {
         String command;
         myDirectory = new File(".");//Use myDirectory to traverse the local machines files
         while (true) {
+			TimerTask idleTimeoutExit = new TimerTask()
+            {
+                public void run()
+                {
+                    System.out.println("You have been idle for not entering any commands for " + timeoutSeconds + " seconds.");
+                    System.out.println("Exiting Program.");
+                    session.disconnect();
+                    System.exit(0);
+                }
+            };
+			Timer timer = new Timer();
+			timer.schedule( idleTimeoutExit, timeoutSeconds*1000 );
             System.out.print("$ ");
             command = null;
             command = in.nextLine();
+			timer.cancel();
             if (command.equals("ls")) {
                 ls();
             } else if (command.equals("cls")) {
@@ -75,6 +92,8 @@ public class OptionWindow {
                     multiget(command2);
                 } else if (command.equals("multiput")){
                     multiput(command2);
+                } else if (command.equals("cp")){
+                    copyDir(command2);
                 }
             }
         }
@@ -578,6 +597,95 @@ public class OptionWindow {
             f.printStackTrace();
         }
         return;
+    }
+
+    //Copy Directory from remote to remote
+    public static void copyDir(String arguments) {
+        String [] parameters = arguments.split(" ");
+        if(parameters.length != 2){
+            System.out.println("Invalid Parameters for copy command");
+            return;
+        }
+
+        String src = parameters[0];
+        String dest = parameters[1];
+        Channel downloadChannel = null;
+        ChannelSftp downloadChannelSftp = null;
+
+        //Check that both source and dest exists and are directories
+        try{
+            SftpATTRS srcStat = channelSftp.stat(src);
+            SftpATTRS destStat = channelSftp.stat(dest);
+            if(!srcStat.isDir()){
+                System.out.println("Source path is not a directory.");
+                return;
+            }
+            if(!destStat.isDir()){
+                System.out.println("Destination path is not a directory.");
+                return;
+            }
+
+            downloadChannel = session.openChannel("sftp");
+            downloadChannel.connect();
+            downloadChannelSftp = (ChannelSftp) downloadChannel;
+
+            downloadChannelSftp.cd(channelSftp.pwd());
+            downloadChannelSftp.cd(src);
+
+            String savedDir = channelSftp.pwd();
+            String[] temp = downloadChannelSftp.pwd().split("/");
+
+            channelSftp.cd(dest);
+            channelSftp.mkdir(temp[temp.length-1]);
+            channelSftp.cd(temp[temp.length-1]);
+            copyDir(downloadChannelSftp);
+            channelSftp.cd(savedDir);
+        }
+        catch(JSchException e){
+            e.printStackTrace();
+            System.out.println(e.toString());
+        }
+
+        catch(SftpException e) {
+            e.printStackTrace();
+            System.out.println(e.toString());
+        }
+        if(downloadChannelSftp != null)
+            downloadChannelSftp.disconnect();
+        return;
+    }
+
+
+    private static void copyDir(ChannelSftp downloadChannelSftp) {
+        try {
+            Vector filelist = downloadChannelSftp.ls(downloadChannelSftp.pwd());
+            for (int i = 0; i < filelist.size(); i++) {
+                ChannelSftp.LsEntry entry = (ChannelSftp.LsEntry) filelist.get(i);
+                String filename = entry.getFilename();
+                if (filename.charAt(0) != '.') {
+                    //Case for a file
+                    if (!entry.getAttrs().isDir()) {
+                        InputStream tempInput = downloadChannelSftp.get(filename);
+                        channelSftp.put(tempInput, filename);
+                    }
+                    else {
+                        //Case for directories
+                        downloadChannelSftp.cd(downloadChannelSftp.pwd() + "/" + filename);
+
+                        channelSftp.mkdir(filename);
+                        channelSftp.cd(filename);
+                        copyDir(downloadChannelSftp);
+
+                        channelSftp.cd("..");
+                        downloadChannelSftp.cd("..");
+                    }
+                }
+            }
+        }
+        catch (SftpException e) {
+            e.printStackTrace();
+            System.out.println(e.toString());
+        }
     }
 }
 
