@@ -1,8 +1,15 @@
 package com.pdx.cs410.sftp;
 
 import com.jcraft.jsch.*;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
+import javax.annotation.processing.FilerException;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Scanner;
 
 public class SFTP {
@@ -18,6 +25,7 @@ public class SFTP {
     public static String saveInfo = null;
     public static String useSavedInfo = null;
     public static boolean isUsingSavedInfo = false;
+    public static ArrayList<Profile> profiles;
 
     public static void main(String[] args){
             JSch.setConfig("StrictHostKeyChecking", "no");
@@ -97,15 +105,28 @@ public class SFTP {
     // currently this will overwrite any existing file
     private static boolean saveConnectionInfo() {
 
-        File file = new File("superSecureConnectionInfo.secret");
+        File file = new File("profiles.json");
+
+        Profile newProfile = new Profile(hostname, PORT, username);
+        profiles.add(newProfile);
 
         try {
             file.createNewFile();
             FileWriter writer = new FileWriter(file);
 
+            JSONArray array = new JSONArray();
+
+            for(Profile profile : profiles) {
+                JSONObject obj = new JSONObject();
+                obj.put("hostname", profile.hostname);
+                obj.put("port", profile.port);
+                obj.put("name", profile.name);
+
+                array.add(obj);
+            }
+
             // write connection info to the file
-            writer.write(hostname +"\n" + PORT + "\n" + username);
-            writer.flush();
+            writer.write(array.toJSONString());
             writer.close();
 
         } catch(Exception e) {
@@ -119,41 +140,43 @@ public class SFTP {
     // checks if connection info already exists in a file, and if so it loads the info
     private static boolean loadExistingConnectionInfo() {
 
-        File file = new File("superSecureConnectionInfo.secret");
+        File file = new File("profiles.json");
 
         if (file.exists()) {
 
-            // read the data from the file in a barbaric manner (probably needs a lot more error checking)
-            try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-                String line;
+            JSONParser parser = new JSONParser();
+            profiles = new ArrayList<>();
 
-                if ((line = br.readLine()) != null) { // disgusting
-                    hostname = line;
-                } else {
-                    return false;
+            try {
+                Object obj = parser.parse(new FileReader(file.getAbsolutePath()));
+                JSONArray array = (JSONArray) obj;
+
+                for(int i = 0; i < array.size(); i++) {
+                    JSONObject jsonProfile = (JSONObject) array.get(i);
+
+                    String host = (String) jsonProfile.get("hostname");
+                    String name = (String) jsonProfile.get("name");
+                    int port = Integer.parseInt((jsonProfile.get("port")).toString());
+
+                    hostname = host;
+                    username = name;
+                    PORT = port;
+
+                    profiles.add(new Profile(hostname, port, name));
                 }
 
-                if ((line = br.readLine()) != null) { // disgusting
-                    PORT = Integer.parseInt(line);
-                } else {
-                    return false;
-                }
 
-                if ((line = br.readLine()) != null) { // disgusting
-                    username = line;
-                } else {
-                    return false;
-                }
-
-            } catch (Exception e) {
+            } catch (ParseException | IOException e) {
                 e.printStackTrace();
+                System.out.println("Failed to parse profiles file");
                 return false;
             }
-        } else {
-            return false;
-        }
 
-        return true;
+            return true;
+        } else {
+            profiles = new ArrayList<>();
+        }
+        return false;
     }
 
 }
