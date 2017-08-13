@@ -198,7 +198,7 @@ public class OptionWindow {
         try {
             channelSftp.get(toFind, path);
         } catch (SftpException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             System.out.println("Could not retrieve " + toFind + " to " + path + " (File does not exist).");
         }
     }
@@ -213,7 +213,7 @@ public class OptionWindow {
         try {
             channelSftp.put(myDirectory.getAbsolutePath()+"\\"+toFind, path);
         } catch (SftpException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             System.out.println("Could not move "+ toFind + " to " + path + " (File doesn't exist).");
         }
     }
