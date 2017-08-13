@@ -327,6 +327,10 @@ public class OptionWindow {
     public static void multiget(String toGet){
         int indexOf = 0;
         List<String> Files = new ArrayList<String>();
+        if(toGet.equals("")){
+            System.out.println("Invalid filename.");
+            return;
+        }
         if(!toGet.contains(" ")){
             get(toGet);
         }
@@ -349,6 +353,10 @@ public class OptionWindow {
     public static void multiput(String toPut){
         int indexOf = 0;
         List<String> Files = new ArrayList<String>();
+        if(toPut.equals("")){
+            System.out.println("Invalid filename.");
+            return;
+        }
         if(!toPut.contains(" ")){
             put(toPut);
         }
