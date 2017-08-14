@@ -61,8 +61,6 @@ public class OptionWindow {
                 ls();
             } else if (command.equals("cls")) {
                 cls();
-            } else if (command.startsWith("mkdir ") && (command.length() > 6)) {
-                mkdir(command.substring(6));
             } else if (command.equals("mkdir")) {
                 mkdir();
 
@@ -98,6 +96,8 @@ public class OptionWindow {
                     multiput(command2);
                 } else if (command.equals("cp")){
                     copyDir(command2);
+                } else if (command.equals("mkdir")){
+                    mkdir(command2);
                 }
             }
         }
@@ -229,6 +229,13 @@ public class OptionWindow {
 
     // mkdir variation that accepts a string in the same manner as the mkdir linux command.
     public static void mkdir(String newdir) {
+        // Throw early if possible.
+        if(newdir.equals(" ") || newdir.equals(""))
+        {
+            System.out.println("Invalid directory name.");
+            return;
+        }
+
         // Check for invalid characters before building the File object using a blacklist.
         // indexOf will return -1 if the input does not exist in the string array.
         if (newdir.indexOf("<") != -1 || newdir.indexOf(">") != -1 || newdir.indexOf("%") != -1 || newdir.indexOf(":") != -1
@@ -454,44 +461,43 @@ public class OptionWindow {
                     // Handles the regex for read permissions.
                     if (fields[i].contains("r"))
                         permissions += 4 * (multiplierU + multiplierG + multiplierO);
-                    else{
-                        if(!fields[i].matches(".*u.*") && octal.matches(".*[4567][01234567][01234567]"))
-                            permissions += 400;
 
-                        if (!fields[i].matches(".*g.*") && octal.matches(".*[4567][01234567]"))
-                            permissions += 40;
+                    if(!fields[i].matches(".*u.*") && octal.matches(".*[4567][01234567][01234567]"))
+                        permissions += 400;
 
-                        if (!fields[i].matches(".*o.*") && octal.matches(".*[4567]"))
-                            permissions += 4;
-                    }
+                    if (!fields[i].matches(".*g.*") && octal.matches(".*[4567][01234567]"))
+                        permissions += 40;
+
+                    if (!fields[i].matches(".*o.*") && octal.matches(".*[4567]"))
+                        permissions += 4;
+
 
                     // Handles the regex for write permissions.
                     if (fields[i].contains("w"))
                         permissions += 2 * (multiplierU + multiplierG + multiplierO);
-                    else{
-                        if(!fields[i].matches(".*u.*") && octal.matches(".*[2367][01234567][01234567]"))
-                            permissions += 200;
 
-                        if (!fields[i].matches(".*g.*") && octal.matches(".*[2367][01234567]"))
-                            permissions += 20;
+                    if(!fields[i].matches(".*u.*") && octal.matches(".*[2367][01234567][01234567]"))
+                        permissions += 200;
 
-                        if (!fields[i].matches(".*o.*") && octal.matches(".*[2367]"))
-                            permissions += 2;
-                    }
+                    if (!fields[i].matches(".*g.*") && octal.matches(".*[2367][01234567]"))
+                        permissions += 20;
+
+                    if (!fields[i].matches(".*o.*") && octal.matches(".*[2367]"))
+                        permissions += 2;
+
 
                     // Handles the regex for execute permissions.
                     if (fields[i].contains("e") || fields[i].contains("x"))
                         permissions += multiplierU + multiplierG + multiplierO;
-                    else{
-                        if (!fields[i].matches(".*u.*") && octal.matches(".*[1357][01234567][01234567]"))
-                            permissions += 100;
 
-                        if (!fields[i].matches(".*g.*") && octal.matches(".*[1357][01234567]"))
-                            permissions += 10;
+                    if (!fields[i].matches(".*u.*") && octal.matches(".*[1357][01234567][01234567]"))
+                        permissions += 100;
 
-                        if (!fields[i].matches(".*o.*") && octal.matches(".*[1357]"))
-                            permissions += 1;
-                    }
+                    if (!fields[i].matches(".*g.*") && octal.matches(".*[1357][01234567]"))
+                        permissions += 10;
+
+                    if (!fields[i].matches(".*o.*") && octal.matches(".*[1357]"))
+                        permissions += 1;
                 }
                 else if (fields[i].contains("+")) {
                     // Handles the regex for read permissions.
@@ -564,7 +570,8 @@ public class OptionWindow {
                 }
                 else
                 {
-                    System.out.println("Invalid command, operand +, -, =, or octal code omitted.");
+                    System.out.println("Invalid command, operand +, -, =, or octal code omitted, or invalid octal code.");
+                    return;
                 }
 
                 // Try to change the permissions of that file or directory by string conversions.
@@ -716,8 +723,6 @@ public class OptionWindow {
         target = in.nextLine();
 
         // Attempt to resume the process.
-        // Test with mnist_train.csv, showing a file size of 109,575,994 bytes using 'ls -l mnist_train.csv' on the usual
-        // linux client and a rounded size of 107,008 kB on your local machine.
         // Quickly finishes if the file already exists on both ends.
         // Complains if the target file does not exist.
         // If using put without part of the file on the remote end, will basically function as a standard put command.
@@ -730,8 +735,7 @@ public class OptionWindow {
         }
         catch (SftpException e)
         {
-            e.printStackTrace();
-            System.out.print(target + " could not be copied from.");
+            System.out.println(target + " could not be copied from.");
         }
         return;
     }
