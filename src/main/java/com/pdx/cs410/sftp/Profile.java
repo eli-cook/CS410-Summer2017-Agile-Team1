@@ -1,8 +1,5 @@
 package com.pdx.cs410.sftp;
 
-/**
- * Created by Eli on 8/12/2017.
- */
 public class Profile {
     String hostname;
     int port;
@@ -12,5 +9,9 @@ public class Profile {
         this.hostname = hostname;
         this.port = port;
         this.name = name;
+    }
+
+    public boolean isSameAs(Profile otherProfile) {
+        return hostname.equals(otherProfile.hostname) && port == otherProfile.port && name.equals(otherProfile.name);
     }
 }

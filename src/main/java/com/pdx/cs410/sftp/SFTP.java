@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Scanner;
 
+import static java.lang.Integer.parseInt;
+
 public class SFTP {
     public static Scanner in = new Scanner(System.in);
     public static JSch client = new JSch();
@@ -41,13 +43,11 @@ public class SFTP {
         boolean lockDown = false;
         while(!lockDown){
 
-            // check if a file with connection info exists
+            // check if a file with connection info exists and load in the info if so
             if (loadExistingConnectionInfo()) {
-                System.out.println("Would you like to use your saved connection info (" + username + "@" + hostname + ")? (y/n)");
-                useSavedInfo = in.nextLine();
 
-                // check if the user wants to use the saved info
-                if (useSavedInfo.toLowerCase().equals("y")) {
+                // ask the user which profile they would like to select (if there are any)
+                if (selectProfile()) {
                     isUsingSavedInfo = true;
                 }
             }
@@ -83,14 +83,12 @@ public class SFTP {
 
                         // save the info
                         if (saveConnectionInfo()) {
-                            System.out.println("Your connection info (" + username + "@" + hostname + ") was saved successfully.");
-                        } else {
-                            System.out.println("ERROR: Your connection info was not saved.");
+                            System.out.println("Your connection info (" + username + "@" + hostname + ":" + PORT + ") was saved successfully.");
                         }
                     }
                 }
 
-            }catch(JSchException e){
+            } catch(JSchException e){
                 System.out.println("You were not logged into " + hostname + "due to a login error.");
                 System.out.print("Would you like to try again? (Y/N) ");
                 answer = in.nextLine();
@@ -102,12 +100,20 @@ public class SFTP {
     }
 
     // saves the connection info (hostname, PORT, and username) to a file
-    // currently this will overwrite any existing file
     private static boolean saveConnectionInfo() {
 
         File file = new File("profiles.json");
 
         Profile newProfile = new Profile(hostname, PORT, username);
+
+        // check if the user's new info already exists within the profiles, if so alert the user and abort
+        for (Profile profile : profiles) {
+            if (profile.isSameAs(newProfile)) {
+                System.out.println("This connection info has already saved.");
+                return false;
+            }
+        }
+
         profiles.add(newProfile);
 
         try {
@@ -156,27 +162,67 @@ public class SFTP {
 
                     String host = (String) jsonProfile.get("hostname");
                     String name = (String) jsonProfile.get("name");
-                    int port = Integer.parseInt((jsonProfile.get("port")).toString());
+                    int port = parseInt((jsonProfile.get("port")).toString());
 
-                    hostname = host;
-                    username = name;
-                    PORT = port;
+                    //hostname = host;
+                    //username = name;
+                    //PORT = port;
 
-                    profiles.add(new Profile(hostname, port, name));
+                    profiles.add(new Profile(host, port, name));
                 }
 
 
             } catch (ParseException | IOException e) {
                 e.printStackTrace();
-                System.out.println("Failed to parse profiles file");
+                System.out.println("Failed to parse the profiles file: profiles.json");
                 return false;
             }
 
             return true;
+
         } else {
             profiles = new ArrayList<>();
         }
+
         return false;
+    }
+
+    // has the user select one of the loaded profiles and then sets the connection info to it
+    private static boolean selectProfile() {
+
+        int selection = 0;
+
+        // verify that we have at least one profile loaded
+        if (profiles.size() < 1) {
+            return false;
+        }
+
+        System.out.println("Would you like to use one of the following saved profiles? Please enter the corresponding option:");
+
+        System.out.println("0: None.");
+
+        for (int i = 0; i < profiles.size(); i++) {
+            Profile currProfile = profiles.get(i);
+            System.out.println((i + 1) + ": " + currProfile.name + "@" + currProfile.hostname + ":" + currProfile.port);
+        }
+
+        selection = parseInt(in.nextLine());
+
+        // handle the user's selection and load a profile if one was selected
+        if (selection > 0 && selection <= profiles.size()) {
+
+            // load the selected profile into our connection info
+            Profile selectedProfile = profiles.get(selection - 1);
+            hostname = selectedProfile.hostname;
+            username = selectedProfile.name;
+            PORT = selectedProfile.port;
+
+            return true;
+
+        } else {
+            return false;
+        }
+
     }
 
 }
