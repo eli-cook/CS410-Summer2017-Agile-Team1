@@ -23,7 +23,9 @@ Next, to import this project do the following:
 # Instructions
 
 ## Logging In
-**TODO: Include notes of connecting from saved connection**
+When logging in, the user will be prompted for the hostname, port, username, and password.
+
+Note that if a successful connection occurs the user will be asked if they want to save their connection info. If the user chooses to save their info a ```profiles.json``` file will be created which stores the hostname, port number, and username in JSON format. On future uses of the program the user will be asked if they wish to use one of their saved profiles which allows them to only need to enter the password. Also, note that a variable number of profiles can be saved and if the user wishes to manually modify their saved profiles they can edit the ```profiles.json``` file as long as they follow the storage convention.
 
 ## Commands
 * Logging off: ```logoff```
