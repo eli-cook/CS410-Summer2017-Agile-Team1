@@ -89,7 +89,7 @@ public class SFTP {
                 }
 
             } catch(JSchException e){
-                System.out.println("You were not logged into " + hostname + "due to a login error.");
+                System.out.println("You were not logged into " + hostname + " due to a login error.");
                 System.out.print("Would you like to try again? (Y/N) ");
                 answer = in.nextLine();
                 if(answer.contentEquals("no"))

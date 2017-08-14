@@ -279,7 +279,11 @@ public class OptionWindow {
             }
 
         } catch (SftpException e) {
-            e.printStackTrace();
+            if (e.id == 2) {
+                System.out.println("The specified target to remove does not exist.");
+            } else {
+                e.printStackTrace();
+            }
         }
     }
     
