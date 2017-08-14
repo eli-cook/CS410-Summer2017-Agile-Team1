@@ -600,10 +600,15 @@ public class OptionWindow {
         Channel downloadChannel = null;
         ChannelSftp downloadChannelSftp = null;
 
-        //Check that both source and dest exists and are directories
         try{
+
+            //Check that both source and dest exists
             SftpATTRS srcStat = channelSftp.stat(src);
+            String srcPath = channelSftp.realpath(src);
             SftpATTRS destStat = channelSftp.stat(dest);
+            String destPath = channelSftp.realpath(dest);
+
+            //Check that both source and dest are directories
             if(!srcStat.isDir()){
                 System.out.println("Source path is not a directory.");
                 return;
@@ -611,6 +616,13 @@ public class OptionWindow {
             if(!destStat.isDir()){
                 System.out.println("Destination path is not a directory.");
                 return;
+            }
+            String exception = null;
+
+            //Check whether dest is src or is a subfolder of src, if so add it to exception to avoid infinite recursion
+            if(destPath.startsWith(srcPath))
+            {
+                exception = destPath;
             }
 
             downloadChannel = session.openChannel("sftp");
@@ -626,7 +638,16 @@ public class OptionWindow {
             channelSftp.cd(dest);
             channelSftp.mkdir(temp[temp.length-1]);
             channelSftp.cd(temp[temp.length-1]);
-            copyDir(downloadChannelSftp);
+
+            if(exception != null)
+            {
+                if(dest.contains("/")) {
+                    temp = dest.split("/");
+                    dest = temp[temp.length-1];
+                }
+            }
+
+            copyDir(downloadChannelSftp, exception, dest);
             channelSftp.cd(savedDir);
         }
         catch(JSchException e){
@@ -644,12 +665,21 @@ public class OptionWindow {
     }
 
 
-    private static void copyDir(ChannelSftp downloadChannelSftp) {
+    private static void copyDir(ChannelSftp downloadChannelSftp, String exception, String dest) {
         try {
             Vector filelist = downloadChannelSftp.ls(downloadChannelSftp.pwd());
             for (int i = 0; i < filelist.size(); i++) {
                 ChannelSftp.LsEntry entry = (ChannelSftp.LsEntry) filelist.get(i);
                 String filename = entry.getFilename();
+                //Prevent infinite recursion
+                if(exception != null) {
+                    if(filename.equals(dest)) {
+                        String pathCheck = downloadChannelSftp.realpath(filename);
+                        System.out.println(pathCheck);
+                        if(pathCheck.equals(exception))
+                            continue;
+                    }
+                }
                 if (filename.charAt(0) != '.') {
                     //Case for a file
                     if (!entry.getAttrs().isDir()) {
@@ -659,11 +689,9 @@ public class OptionWindow {
                     else {
                         //Case for directories
                         downloadChannelSftp.cd(downloadChannelSftp.pwd() + "/" + filename);
-
                         channelSftp.mkdir(filename);
                         channelSftp.cd(filename);
-                        copyDir(downloadChannelSftp);
-
+                        copyDir(downloadChannelSftp, exception, dest);
                         channelSftp.cd("..");
                         downloadChannelSftp.cd("..");
                     }
