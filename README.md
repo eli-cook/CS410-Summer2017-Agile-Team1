@@ -2,9 +2,6 @@
 
 # Getting Started
 
-## Running from a .JAR
-TODO: **Should we have instructions for running from a JAR for the professor?**
-
 ## Importing into IntelliJ
 
 First clone branch `gradle` into a directory using the following command
